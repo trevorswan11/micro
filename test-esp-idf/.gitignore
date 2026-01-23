@@ -1,0 +1,4 @@
+build/
+.cache/
+managed_components/
+__cmake*
