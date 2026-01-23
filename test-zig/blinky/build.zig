@@ -1,25 +1,16 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-comptime {
-    const current_zig = builtin.zig_version;
-    const required_zig = std.SemanticVersion.parse("0.14.0-xtensa") catch unreachable;
-    if (current_zig.order(required_zig) != .eq) {
-           const error_message =
-               \\Sorry, it looks like your version of Zig ({f}) isn't right. :-(
-               \\
-               \\ESP32 compilation requires zig version {f}
-               \\
-               \\https://github.com/kassane/zig-espressif-bootstrap/releases/tag/0.14.0-xtensa
-               \\
-           ;
-           @compileError(std.fmt.comptimePrint(error_message, .{current_zig, required_zig}));
-       }
-}
-
 // Reference: https://github.com/kassane/zig-esp-idf-sample/blob/main/build.zig
 pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
+    const esp32_xtensa: std.Target.Query = .{
+        .cpu_arch = .xtensa,
+        .cpu_model = .{ .explicit = &std.Target.xtensa.cpu.esp32 },
+        .os_tag = .freestanding,
+        .abi = .none,
+    };
+
+    const target = b.resolveTargetQuery(esp32_xtensa);
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
@@ -56,4 +47,22 @@ fn isEspXtensa() bool {
         const result = std.mem.startsWith(u8, model.name, "esp");
         if (result) return true;
     } else return false;
+}
+
+comptime {
+    const current_zig = builtin.zig_version;
+    const required_zig = std.SemanticVersion.parse("0.14.0-xtensa") catch unreachable;
+    if (current_zig.order(required_zig) != .eq) {
+        const error_message =
+            \\Sorry, it looks like your version of Zig ({f}) isn't right. :-(
+            \\
+            \\ESP32 compilation requires zig version {f}
+            \\
+            \\https://github.com/kassane/zig-espressif-bootstrap/releases/tag/0.14.0-xtensa
+            \\
+        ;
+        @compileError(std.fmt.comptimePrint(error_message, .{ current_zig, required_zig }));
+    } else if (!isEspXtensa()) {
+        @compileError("Xtensa is not supported by your build of the compiler!");
+    }
 }
