@@ -1,12 +1,13 @@
 .{
     .name = .blinky,
-    .version = "0.0.0",
-    .fingerprint = 0x38bb0e93b09da24, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.14.0",
-    .dependencies = .{},
+    .version = "0.1.0",
+    .fingerprint = 0x38bb0e9c8251d60,
     .paths = .{
+        "main",
+        "imports",
         "build.zig",
         "build.zig.zon",
-        "src",
+        "LICENSE",
+        "README.md",
     },
 }
