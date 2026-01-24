@@ -13,9 +13,6 @@ pub const std_options: std.Options = .{
 const blink_duration_ms = 1000;
 
 export fn app_main() callconv(.C) void {
-    var heap: idf.heap.HeapCapsAllocator = .init(.MALLOC_CAP_8BIT);
-    if (builtin.mode == .Debug) heap.dump();
-
     idf.gpio.Direction.set(
         .GPIO_NUM_13,
         .GPIO_MODE_OUTPUT,

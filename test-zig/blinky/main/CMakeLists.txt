@@ -5,13 +5,6 @@ idf_component_register(SRCS "esp32/empty.c"
     PRIV_REQUIRES "${DEPS}"
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(ZIG_BUILD_TYPE "Debug")
-else()
-    set(ZIG_BUILD_TYPE "ReleaseSafe")
-endif()
-
-find_program(XZIG_EXE xzig)
 
 set(lib_artifact ${CMAKE_BINARY_DIR}/lib/libblinky.a)
 set(include_dirs
@@ -19,12 +12,12 @@ set(include_dirs
     ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}
 )
 
+find_program(XZIG_EXE xzig)
 add_custom_target(zig_build
     COMMAND ${CMAKE_COMMAND} -E env
         "INCLUDE_DIRS=${include_dirs}"
         ${XZIG_EXE} build
         --build-file ${BUILD_PATH}/main/build.zig
-        -Doptimize=${ZIG_BUILD_TYPE}
         -freference-trace
         --prominent-compile-errors
         --cache-dir ${CMAKE_BINARY_DIR}/.zig-cache

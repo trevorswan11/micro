@@ -3,7 +3,7 @@ const builtin = @import("builtin");
 
 // Reference: https://github.com/kassane/zig-esp-idf-sample/blob/main/build.zig
 pub fn build(b: *std.Build) !void {
-    const optimize = b.standardOptimizeOption(.{});
+    const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
     const target = b.resolveTargetQuery(.{
         .cpu_arch = .xtensa,
         .cpu_model = .{ .explicit = &std.Target.xtensa.cpu.esp32 },
@@ -32,7 +32,7 @@ pub fn build(b: *std.Build) !void {
 }
 
 fn includeDeps(b: *std.Build, lib: *std.Build.Step.Compile) !void {
-    const idf_path = b.graph.env_map.get("IDF_PATH") orelse @panic("IDF_PATH env var could not be resolved");
+    const idf_path = b.dupe(b.graph.env_map.get("IDF_PATH").?);
     const cmake_install_dir = b.pathJoin(&.{ "..", "zig-out" });
     var build_dir = try b.build_root.handle.openDir(
         cmake_install_dir,

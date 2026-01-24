@@ -2,7 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
-    // const optimize = b.standardOptimizeOption(.{});
     const xzig = std.mem.trimRight(u8, std.fs.path.basename(b.graph.zig_exe), ".exe");
     if (!std.mem.eql(u8, xzig, "xzig")) {
         std.debug.print(
@@ -16,22 +15,30 @@ pub fn build(b: *std.Build) !void {
     const fmt_step = b.step("fmt", "Format all zig files");
     fmt_step.dependOn(&fmt.step);
 
-    const build_dir = "zig-out";
-    const idf_cmd = b.addSystemCommand(&.{ "idf.py", "-B", build_dir, "build" });
+    _ = b.graph.env_map.get("IDF_PATH") orelse @panic("IDF_PATH env var could not be resolved");
+    _ = b.findProgram(&.{"idf.py"}, &.{}) catch @panic("idf.py executable could not be found");
+
+    const cmake_build_dir = "zig-out";
+    const idf_cmd = b.addSystemCommand(&.{ "idf.py", "-B", cmake_build_dir, "build" });
     b.getInstallStep().dependOn(&idf_cmd.step);
 
-    const flash_cmd = b.addSystemCommand(&.{ "idf.py", "-B", build_dir, "flash" });
+    const flash_cmd = b.addSystemCommand(&.{ "idf.py", "-B", cmake_build_dir, "flash" });
     flash_cmd.step.dependOn(&idf_cmd.step);
     const flash_step = b.step("flash", "Flash the binary to the device");
     flash_step.dependOn(&flash_cmd.step);
 
-    const monitor_cmd = b.addSystemCommand(&.{ "idf.py", "-B", build_dir, "monitor" });
+    const monitor_cmd = b.addSystemCommand(&.{ "idf.py", "-B", cmake_build_dir, "monitor" });
     const monitor = b.step("monitor", "Open the serial monitor");
     monitor.dependOn(&monitor_cmd.step);
 
-    const clean_cmd = b.addSystemCommand(&.{ "idf.py", "-B", build_dir, "fullclean" });
+    const clean_cmd = b.addSystemCommand(&.{ "idf.py", "-B", cmake_build_dir, "fullclean" });
     const clean = b.step("clean", "Clean idf artifacts");
     clean.dependOn(&clean_cmd.step);
+    
+    const run_step = b.step("run", "Flash the esp32 and open the serial monitor");
+    const monitor_runner_cmd = b.addSystemCommand(&.{ "idf.py", "-B", cmake_build_dir, "monitor" });
+    monitor_runner_cmd.step.dependOn(&flash_cmd.step);
+    run_step.dependOn(&monitor_runner_cmd.step);
 }
 
 comptime {
