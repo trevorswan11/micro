@@ -24,3 +24,5 @@ For example:
 ```
 
 ZLS is probably still going to warn you about using 0.14.0-xtensa with 0.14.0, but its ok!
+
+_The build system here is a heavily modified version of the one found [here](https://github.com/kassane/zig-esp-idf-sample). It was used for reference throughout this process, and the zig wrappers it provides are used in this example._

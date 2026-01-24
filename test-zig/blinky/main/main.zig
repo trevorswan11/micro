@@ -1,10 +1,14 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const idf = @import("idf");
+
+const idf = @import("idf.zig");
 
 const sys = idf.sys;
-
 const log = std.log.scoped(.@"esp-idf");
+
+const c = @cImport({
+    @cInclude("sdkconfig.h");
+});
 
 pub const panic = idf.panic;
 pub const std_options: std.Options = .{
@@ -15,6 +19,8 @@ pub const std_options: std.Options = .{
 const blink_duration_ms = 1000;
 
 export fn app_main() callconv(.C) void {
+    log.info("Hello, {s}!", .{c.CONFIG_LWIP_LOCAL_HOSTNAME});
+
     idf.gpio.Direction.set(
         .GPIO_NUM_13,
         .GPIO_MODE_OUTPUT,

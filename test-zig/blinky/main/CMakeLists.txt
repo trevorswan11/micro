@@ -5,28 +5,14 @@ idf_component_register(SRCS "esp32/empty.c"
     PRIV_REQUIRES "${DEPS}"
 )
 
+set(LIB_ARTIFACT "${CMAKE_BINARY_DIR}/../lib/libblinky.a")
+target_link_libraries(${COMPONENT_LIB} PRIVATE ${LIB_ARTIFACT})
 
-set(lib_artifact ${CMAKE_BINARY_DIR}/lib/libblinky.a)
-set(include_dirs
-    $<TARGET_PROPERTY:${COMPONENT_LIB},INCLUDE_DIRECTORIES>
-    ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}
+set(IMPLICIT_INC "$<JOIN:${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES},;>")
+set(TARGET_INC "$<JOIN:$<TARGET_PROPERTY:${COMPONENT_LIB},INCLUDE_DIRECTORIES>,;>")
+
+set(INCLUDE_PATH_FILE "${CMAKE_BINARY_DIR}/include_dirs.txt")
+file(GENERATE 
+    OUTPUT "${INCLUDE_PATH_FILE}"
+    CONTENT "${TARGET_INC};${IMPLICIT_INC}"
 )
-
-find_program(XZIG_EXE xzig)
-add_custom_target(zig_build
-    COMMAND ${CMAKE_COMMAND} -E env
-        "INCLUDE_DIRS=${include_dirs}"
-        ${XZIG_EXE} build
-        --build-file ${BUILD_PATH}/main/build.zig
-        -freference-trace
-        --prominent-compile-errors
-        --cache-dir ${CMAKE_BINARY_DIR}/.zig-cache
-        --prefix ${CMAKE_BINARY_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    BYPRODUCTS ${lib_artifact}
-    VERBATIM
-)
-
-add_prebuilt_library(zig ${lib_artifact})
-add_dependencies(zig zig_build)
-target_link_libraries(${COMPONENT_LIB} PRIVATE ${lib_artifact})
