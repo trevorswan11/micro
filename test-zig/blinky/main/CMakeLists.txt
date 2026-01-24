@@ -11,8 +11,14 @@ else()
     set(ZIG_BUILD_TYPE "ReleaseSafe")
 endif()
 
+find_program(XZIG_EXE xzig)
+
 set(lib_artifact ${CMAKE_BINARY_DIR}/lib/libblinky.a)
-set(include_dirs $<TARGET_PROPERTY:${COMPONENT_LIB},INCLUDE_DIRECTORIES> ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES})
+set(include_dirs
+    $<TARGET_PROPERTY:${COMPONENT_LIB},INCLUDE_DIRECTORIES>
+    ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}
+)
+
 add_custom_target(zig_build
     COMMAND ${CMAKE_COMMAND} -E env
         "INCLUDE_DIRS=${include_dirs}"
