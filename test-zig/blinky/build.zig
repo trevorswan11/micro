@@ -2,7 +2,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
-    try verifyEnv(b);
+    _ = b.graph.env_map.get("IDF_PATH") orelse return error.MissingIDFPath;
+    _ = try b.findProgram(&.{"idf.py"}, &.{});
 
     const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
     const target = b.resolveTargetQuery(.{
@@ -38,9 +39,6 @@ pub fn build(b: *std.Build) !void {
         includer.step.dependOn(&configure_cmd.step);
     }
 
-    const compile = b.step("compile", "Compile only the zig static library");
-    compile.dependOn(&blinky_art.step);
-
     const idf_cmd = b.addSystemCommand(&.{ "idf.py", "-B", idf_build_dir, "build" });
     idf_cmd.step.dependOn(&blinky_art.step);
     b.getInstallStep().dependOn(&idf_cmd.step);
@@ -56,20 +54,6 @@ pub fn build(b: *std.Build) !void {
     run_step.dependOn(&monitor_runner_cmd.step);
 
     addTooling(b, idf_build_dir);
-}
-
-fn verifyEnv(b: *std.Build) !void {
-    const xzig = std.mem.trimRight(u8, std.fs.path.basename(b.graph.zig_exe), ".exe");
-    if (!std.mem.eql(u8, xzig, "xzig")) {
-        std.debug.print(
-            \\CMake requires the xtensa zig compiler to be available in your path with the name 'xzig'.
-            \\  The executable being used to run this build is {s}
-        , .{b.graph.zig_exe});
-        return error.InvalidZigBinary;
-    }
-
-    _ = b.graph.env_map.get("IDF_PATH") orelse @panic("IDF_PATH env var could not be resolved");
-    _ = b.findProgram(&.{"idf.py"}, &.{}) catch @panic("idf.py executable could not be found");
 }
 
 const IncludeResolver = struct {
