@@ -1,5 +1,6 @@
-const sys = @import("sys");
 const std = @import("std");
+
+const sys = @import("sys.zig");
 
 /// Alocator for use heap_caps_allocator
 pub const HeapCapsAllocator = struct {

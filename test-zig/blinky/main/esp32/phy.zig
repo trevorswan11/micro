@@ -1,4 +1,4 @@
-const sys = @import("sys");
+const sys = @import("sys.zig");
 
 pub const RF = struct {
     pub fn config(conf: u8) void {

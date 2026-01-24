@@ -1,5 +1,6 @@
-const sys = @import("sys");
 const std = @import("std");
+
+const sys = @import("sys.zig");
 
 // Zig error
 const esp_error = error{

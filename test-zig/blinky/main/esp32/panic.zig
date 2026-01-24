@@ -1,5 +1,5 @@
-const sys = @import("sys");
-const log = @import("log");
+const sys = @import("sys.zig");
+const log = @import("logger.zig");
 
 /// panic handler for esp-idf
 pub fn panic(msg: []const u8, _: ?*@import("std").builtin.StackTrace, _: ?usize) noreturn {

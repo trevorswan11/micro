@@ -1,7 +1,7 @@
 //! Suggestion, use: sys.py add-dependency espressif/led_strip
-
-const sys = @import("sys");
 const std = @import("std");
+
+const sys = @import("sys.zig");
 
 // Functions & types
 pub const led_pixel_format_t = enum(c_uint) {

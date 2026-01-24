@@ -1,4 +1,4 @@
-const sys = @import("sys");
+const sys = @import("sys.zig");
 
 pub const RTT = struct {
     pub fn allocDownBuffer(sName: [*:0]const u8, pBuffer: ?*anyopaque, BufferSize: c_uint, Flags: c_uint) c_int {

@@ -11,10 +11,12 @@ pub fn build(b: *std.Build) !void {
         .abi = .none,
     });
 
-    const idf_import = makeIDFImport(b, .{
-        .optimize = optimize,
+    const esp_idf_mod = b.createModule(.{
+        .root_source_file = b.path("root.zig"),
         .target = target,
+        .optimize = optimize,
     });
+    const idf_import: std.Build.Module.Import = .{ .name = "idf", .module = esp_idf_mod };
 
     const lib_blinky = b.addLibrary(.{
         .name = "blinky",
@@ -27,8 +29,21 @@ pub fn build(b: *std.Build) !void {
         }),
     });
 
-    try includeDeps(b, lib_blinky);
+    // try includeDeps(b, lib_blinky);
     b.installArtifact(lib_blinky);
+
+    const lib_check = b.addLibrary(.{
+        .name = "check",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("app.zig"),
+            .optimize = optimize,
+            .target = target,
+            .imports = &.{idf_import},
+            .link_libc = true,
+        }),
+    });
+
+    b.getInstallStep().dependOn(&lib_check.step);
 }
 
 fn includeDeps(b: *std.Build, lib: *std.Build.Step.Compile) !void {
@@ -75,71 +90,4 @@ fn includeDeps(b: *std.Build, lib: *std.Build.Step.Compile) !void {
             lib.addIncludePath(.{ .cwd_relative = include_dir });
         }
     }
-}
-
-fn makeIDFImport(b: *std.Build, config: struct {
-    optimize: std.builtin.OptimizeMode,
-    target: std.Build.ResolvedTarget,
-}) std.Build.Module.Import {
-    const IDFModuleDef = struct {
-        name: []const u8,
-        file: []const u8,
-        deps: []const []const u8 = &.{},
-    };
-
-    const modules = [_]IDFModuleDef{
-        .{ .name = "sys", .file = "idf-sys.zig" },
-        .{ .name = "error", .file = "error.zig", .deps = &.{"sys"} },
-        .{ .name = "rtos", .file = "rtos.zig", .deps = &.{"sys"} },
-        .{ .name = "ver", .file = "version.zig", .deps = &.{"sys"} },
-        .{ .name = "log", .file = "logger.zig", .deps = &.{"sys"} },
-        .{ .name = "panic", .file = "panic.zig", .deps = &.{ "sys", "log" } },
-        .{ .name = "led", .file = "led-strip.zig", .deps = &.{"sys"} },
-        .{ .name = "bootloader", .file = "bootloader.zig", .deps = &.{"sys"} },
-        .{ .name = "lwip", .file = "lwip.zig", .deps = &.{"sys"} },
-        .{ .name = "mqtt", .file = "mqtt.zig", .deps = &.{"sys"} },
-        .{ .name = "heap", .file = "heap.zig", .deps = &.{"sys"} },
-        .{ .name = "http", .file = "http.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "pulse", .file = "pcnt.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "bluetooth", .file = "bluetooth.zig", .deps = &.{"sys"} },
-        .{ .name = "wifi", .file = "wifi.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "gpio", .file = "gpio.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "uart", .file = "uart.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "i2c", .file = "i2c.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "i2s", .file = "i2s.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "spi", .file = "spi.zig", .deps = &.{ "sys", "error" } },
-        .{ .name = "phy", .file = "phy.zig", .deps = &.{"sys"} },
-        .{ .name = "segger", .file = "segger.zig", .deps = &.{"sys"} },
-        .{ .name = "dsp", .file = "dsp.zig", .deps = &.{"sys"} },
-        .{ .name = "crc", .file = "crc.zig", .deps = &.{"sys"} },
-    };
-
-    var module_map = std.StringArrayHashMap(*std.Build.Module).init(b.allocator);
-    for (modules) |m| {
-        const mod = b.createModule(.{
-            .root_source_file = b.path(b.pathJoin(&.{ "esp32", m.file })),
-            .optimize = config.optimize,
-            .target = config.target,
-        });
-        module_map.put(m.name, mod) catch @panic("OOM");
-    }
-
-    for (modules) |m| {
-        const mod = module_map.get(m.name).?;
-        for (m.deps) |dep_name| {
-            mod.addImport(dep_name, module_map.get(dep_name).?);
-        }
-    }
-
-    const esp_mod = b.createModule(.{
-        .root_source_file = b.path(b.pathJoin(&.{ "esp32", "idf.zig" })),
-        .optimize = config.optimize,
-        .target = config.target,
-    });
-
-    for (module_map.keys(), module_map.values()) |name, mod| {
-        esp_mod.addImport(name, mod);
-    }
-
-    return .{ .name = "esp_idf", .module = esp_mod };
 }

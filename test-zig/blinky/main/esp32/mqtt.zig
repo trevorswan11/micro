@@ -1,5 +1,6 @@
 const std = @import("std");
-const sys = @import("sys");
+
+const sys = @import("sys.zig");
 
 pub const esp_transport_keepalive = extern struct {
     keep_alive_enable: bool = std.mem.zeroes(bool),

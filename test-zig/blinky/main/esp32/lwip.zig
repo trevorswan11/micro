@@ -1,5 +1,6 @@
 const std = @import("std");
-const sys = @import("sys");
+
+const sys = @import("sys.zig");
 
 pub const pollfd = extern struct {
     fd: c_int = std.mem.zeroes(c_int),

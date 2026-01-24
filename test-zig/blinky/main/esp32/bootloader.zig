@@ -1,5 +1,6 @@
-const sys = @import("sys");
 const std = @import("std");
+
+const sys = @import("sys.zig");
 
 pub const efuse_dev_t = extern struct {
     pgm_data0: efuse_pgm_data0_reg_t = std.mem.zeroes(efuse_pgm_data0_reg_t),

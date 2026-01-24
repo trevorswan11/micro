@@ -1,4 +1,4 @@
-const sys = @import("sys");
+const sys = @import("sys.zig");
 
 pub const xTimerCreate = sys.xTimerCreate;
 pub const xTimerCreateStatic = sys.xTimerCreateStatic;
