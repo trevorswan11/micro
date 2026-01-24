@@ -2,8 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const idf = @import("esp_idf");
 
-extern "c" fn printf(format: [*:0]const u8, ...) c_int;
-
 const log = std.log.scoped(.@"esp-idf");
 
 pub const panic = idf.panic;
@@ -17,9 +15,6 @@ const blink_duration_ms = 1000;
 export fn app_main() callconv(.C) void {
     var heap: idf.heap.HeapCapsAllocator = .init(.MALLOC_CAP_8BIT);
     if (builtin.mode == .Debug) heap.dump();
-    _ = idf.sys.esp_log_level_set("esp-idf", .ESP_LOG_VERBOSE);
-
-    _ = printf("=== APP_MAIN STARTED ===\n");
 
     idf.gpio.Direction.set(
         .GPIO_NUM_13,
@@ -28,11 +23,8 @@ export fn app_main() callconv(.C) void {
     log.info("GPIO 13 configured as output", .{});
 
     if (idf.xTaskCreate(blinkTask, "blink", 1024 * 2, null, 5, null) == 0) {
-        _ = printf("ERROR: Failed to create blink task\n");
         @panic("Task creation failed");
     }
-
-    _ = printf("=== APP_MAIN ENDED ===\n");
 }
 
 export fn blinkTask(_: ?*anyopaque) void {
