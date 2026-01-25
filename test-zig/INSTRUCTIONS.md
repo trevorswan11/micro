@@ -9,7 +9,7 @@ After that, compiling _should_ be as easy as running `zig build`. All commands:
 - `zig build monitor` Hooks into the serial monitor of the connected board (does not reflash or rebuild)
 - `zig build clean` Runs the equivalent of `fullclean` through `idf.py`
 - `zig build fmt` Enforce canonical formatting on all zig project files
-- `-Dbypass` This is an option that should be used after the first project configuration. It skips the reconfigure phase of the build system, which is generally not needed. If you make a change to the build system, it is recommended that you allow reconfigure to run again, however.
+- `-Dreconfigure` This is an option that should be used if any build system changes are made after the first project configuration. It forces the reconfigure phase of the build system, which is generally not needed. If the include directory list file is not found, then this is automatically set to true, but is false by default otherwise.
 
 Keep in mind that this is not the latest version of Zig, specifically, the compiler fork we are using here is based on Zig 0.14.0, which was released mid-2025. This does not matter much for the purposes of this repository and associated work, though. Since we are using an older version of zig, you must also match zls to be 0.14.0. I do this in a project specific `.zed` file, but it will be different per editor.
 

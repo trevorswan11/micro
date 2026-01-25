@@ -24,16 +24,33 @@ pub fn build(b: *std.Build) !void {
     });
     const blinky_art = b.addInstallArtifact(lib_blinky, .{});
 
+    var reconfigure = b.option(bool, "reconfigure", "Force the reconfigure phase") orelse false;
     const idf_build_dir = b.pathJoin(&.{ b.install_prefix, "esp32" });
+    const include_dirs_file = b.pathJoin(&.{ idf_build_dir, "include_dirs.txt" });
+
+    const include_dirs_content: ?[]const u8 = b.build_root.handle.readFileAlloc(
+        b.allocator,
+        include_dirs_file,
+        std.math.maxInt(usize),
+    ) catch |err| blk: switch (err) {
+        error.FileNotFound => {
+            reconfigure = true;
+            break :blk null;
+        },
+        else => return err,
+    };
+
     const includer: *IncludeResolver = .init(
         b,
         lib_blinky,
-        b.pathJoin(&.{ idf_build_dir, "include_dirs.txt" }),
+        if (include_dirs_content) |content|
+            .{ .content = content }
+        else
+            .{ .path = include_dirs_file },
     );
     lib_blinky.step.dependOn(&includer.step);
 
-    const bypass_reconfigure = b.option(bool, "bypass", "Bypass the reconfigure phase") orelse false;
-    if (!bypass_reconfigure) {
+    if (reconfigure) {
         const configure_cmd = b.addSystemCommand(&.{ "idf.py", "-B", idf_build_dir, "reconfigure" });
         lib_blinky.step.dependOn(&configure_cmd.step);
         includer.step.dependOn(&configure_cmd.step);
@@ -57,14 +74,19 @@ pub fn build(b: *std.Build) !void {
 }
 
 const IncludeResolver = struct {
+    pub const IncludeDirs = union(enum) {
+        path: []const u8,
+        content: []const u8,
+    };
+
     step: std.Build.Step,
     lib: *std.Build.Step.Compile,
-    include_list_path: []const u8,
+    include_dirs: IncludeDirs,
 
     pub fn init(
         b: *std.Build,
         lib: *std.Build.Step.Compile,
-        include_list_path: []const u8,
+        include_dirs: IncludeDirs,
     ) *IncludeResolver {
         const self = b.allocator.create(IncludeResolver) catch @panic("OOM");
         self.* = .{
@@ -75,7 +97,7 @@ const IncludeResolver = struct {
                 .makeFn = addIncludePaths,
             }),
             .lib = lib,
-            .include_list_path = include_list_path,
+            .include_dirs = include_dirs,
         };
         return self;
     }
@@ -86,14 +108,17 @@ const IncludeResolver = struct {
         const b = step.owner;
         const allocator = b.allocator;
 
-        const contents = try b.build_root.handle.readFileAlloc(
-            allocator,
-            self.include_list_path,
-            std.math.maxInt(usize),
-        );
+        const contents = switch (self.include_dirs) {
+            .path => |p| try b.build_root.handle.readFileAlloc(
+                allocator,
+                p,
+                std.math.maxInt(usize),
+            ),
+            .content => |c| c,
+        };
         var seen_set: std.StringHashMap(void) = .init(allocator);
-
         var it = std.mem.tokenizeScalar(u8, contents, ';');
+
         while (it.next()) |inc_path| {
             const trimmed = std.mem.trim(u8, inc_path, " \n\r\t");
             if (trimmed.len > 0 and !seen_set.contains(trimmed)) {
