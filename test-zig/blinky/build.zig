@@ -138,6 +138,10 @@ fn addTooling(b: *std.Build, idf_build_dir: []const u8) void {
     const monitor_cmd = b.addSystemCommand(&.{ "idf.py", "-B", idf_build_dir, "monitor" });
     const monitor = b.step("monitor", "Open the serial monitor");
     monitor.dependOn(&monitor_cmd.step);
+    
+    const size_cmd = b.addSystemCommand(&.{ "idf.py", "-B", idf_build_dir, "size" });
+    const size = b.step("size", "Get the memory type usage summary");
+    size.dependOn(&size_cmd.step);
 
     const clean_cmd = b.addSystemCommand(&.{ "idf.py", "-B", idf_build_dir, "fullclean" });
     const clean = b.step("clean", "Clean idf artifacts");
