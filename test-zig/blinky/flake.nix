@@ -5,8 +5,15 @@
     esp-idf.url = "github:mirrexagon/nixpkgs-esp-dev";
   };
 
-  outputs = { self, nixpkgs, flake-utils, esp-idf, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      nixpkgs,
+      flake-utils,
+      esp-idf,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -15,19 +22,24 @@
           ];
         };
 
-        # Determine architecture-specific properties
-        platformSrc = if system == "x86_64-linux" then
-          {
-            url = "https://github.com/kassane/zig-espressif-bootstrap/releases/download/0.14.0-xtensa/zig-relsafe-x86_64-linux-musl-baseline.tar.xz";
-            sha256 = "sha256-czEQX03pDNzoh9SGhWfs5miU7vK1md7sYCd3lHSLLCA=";
-          }
-        else if system == "aarch64-linux" then
-          {
-            url = "https://github.com/kassane/zig-espressif-bootstrap/releases/download/0.14.0-xtensa/zig-relsafe-aarch64-linux-musl-baseline.tar.xz";
-            sha256 = "sha256-MUrTa7hI1Gx4vCM+0Tnu5D7agoUWzPb11pufIBptFCQ=";
-          }
-        else
-          throw "Unsupported platform: ${system}";
+        platformSrc =
+          if system == "x86_64-linux" then
+            {
+              url = "https://github.com/kassane/zig-espressif-bootstrap/releases/download/0.14.0-xtensa/zig-relsafe-x86_64-linux-musl-baseline.tar.xz";
+              sha256 = "sha256-czEQX03pDNzoh9SGhWfs5miU7vK1md7sYCd3lHSLLCA=";
+            }
+          else if system == "aarch64-linux" then
+            {
+              url = "https://github.com/kassane/zig-espressif-bootstrap/releases/download/0.14.0-xtensa/zig-relsafe-aarch64-linux-musl-baseline.tar.xz";
+              sha256 = "sha256-MUrTa7hI1Gx4vCM+0Tnu5D7agoUWzPb11pufIBptFCQ=";
+            }
+          else if system == "aarch64-darwin" then
+            {
+              url = "https://github.com/kassane/zig-espressif-bootstrap/releases/download/0.14.0-xtensa/zig-relsafe-aarch64-macos-baseline.tar.xz";
+              sha256 = "sha256-D+2AKAbSLeozaEWxGYhCXdoyHEHTZlZblMLTjP41gik=";
+            }
+          else
+            throw "Unsupported platform: ${system}";
 
       in
       with pkgs;
