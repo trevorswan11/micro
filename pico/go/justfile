@@ -1,8 +1,8 @@
 unexport GOROOT
 
-build:
-    tinygo build -target=pico -o build/main.elf main.go
+@build:
+    tinygo build -target=$TINYGO_TARGET main.go
 
-flash:
-    tinygo flash -target=pico main.go
+@flash:
+    tinygo flash -target=$TINYGO_TARGET main.go
     
