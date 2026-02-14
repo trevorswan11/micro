@@ -1,4 +1,13 @@
-build/
-.cache/
+.zig-cache/
+zig-out/
+*.o
+
+.zed
+.DS_Store
+
+__cmake**
+.cache
+build
+
 managed_components/
-__cmake*
+sdkconfig

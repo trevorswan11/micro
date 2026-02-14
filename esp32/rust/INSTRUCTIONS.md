@@ -9,4 +9,3 @@
 
 ## Flashing the ESP32
 - `cargo run --release` should work, but it fails on my machine
-- This is ran from the `blinky` directory

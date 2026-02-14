@@ -12,4 +12,4 @@ Once you have `esp-idf` and have the dev environment enabled, create a project:
 
 Once you have a project, read the documentation for your use case.
 
-You can try running the code in the repository by doing `idf.py build` and then flashing it, but I cannot guarantee that this will work out of the box at this point. If flashing is successful, then you should see the LED on the board blinking :)
+You can try running the code in the repository by doing `idf.py build` and then flashing it with `idf.py flash`. If flashing is successful, then you should see the LED on the board blinking :)
