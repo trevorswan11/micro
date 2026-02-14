@@ -1,6 +1,6 @@
 set(DEPS pthread driver)
 
-idf_component_register(SRCS "potion.cpp"
+idf_component_register(SRCS "main.cpp"
     INCLUDE_DIRS "."
     PRIV_REQUIRES "${DEPS}"
 )
